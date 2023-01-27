@@ -29,11 +29,14 @@ int main()
     std::cin >> scale;
 
     std::cout << "Number of frames to process: ";
-    int frame_num = 0;
-    std::cin >> frame_num;
+    int num_frames = 0;
+    std::cin >> num_frames;
 
 
-    for (int i = 1; i <= frame_num; i++) {
+    float overlappedPercTotal = 0.0f;
+
+
+    for (int i = 1; i <= num_frames; i++) {
         std::cout << "Processing frame " << i << std::endl;
 
         std::vector<Particle> particles;
@@ -112,7 +115,7 @@ int main()
         std::cout << "Creating Volume\n";
 
 
-        openvdb::Vec3IGrid::Ptr color = openvdb::Vec3IGrid::create();
+        openvdb::Vec3fGrid::Ptr color = openvdb::Vec3fGrid::create();
         color->setName("color");
 
         openvdb::FloatGrid::Ptr density = openvdb::FloatGrid::create();
@@ -123,7 +126,7 @@ int main()
         int overlapped_values = 0;
 
 
-        openvdb::Vec3IGrid::Accessor colorAccess = color->getAccessor();
+        openvdb::Vec3fGrid::Accessor colorAccess = color->getAccessor();
         openvdb::FloatGrid::Accessor densityAcccess = density->getAccessor();
         for (int i = 0; i < particles.size(); i++) {
 
@@ -136,12 +139,13 @@ int main()
                 new_values++;
             }
 
-            colorAccess.setValue(curr_coord, openvdb::Vec3i(particles[i].r, particles[i].g, particles[i].b));
+            colorAccess.setValue(curr_coord, openvdb::Vec3i(((float)particles[i].r) / 255.f, ((float)particles[i].g) / 255.f, ((float)particles[i].b) / 255.f));
             densityAcccess.setValue(openvdb::Coord(particles[i].x, particles[i].y, particles[i].z), 1.0f);
         }
 
-
-        std::cout << "Overlapped particle to voxel percentage: " << ((double)overlapped_values / ((double)new_values + (double)overlapped_values)) << std::endl;
+        float overlappedPerc = ((double)overlapped_values / ((double)new_values + (double)overlapped_values));
+        std::cout << "Overlapped particle to voxel percentage: " << overlappedPerc << std::endl;
+        overlappedPercTotal += overlappedPerc;
 
 
         openvdb::GridPtrVec grids;
@@ -162,6 +166,9 @@ int main()
         file.close();
         std::system("cls");
     }
+
+
+    std::cout << "Completed!\nAverage Overlapped percentage: " << (overlappedPercTotal / num_frames) << std::endl;
     
     
 
